@@ -15,7 +15,7 @@ pip install -e .
 Here's a simple example of how to use AIAPiper to download AIA data:
 
 ```python
-from aiapiper.core import PipeFix
+from aiapiper.tools import PipeFix
 import astropy.units as u
 ```
 
