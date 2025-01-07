@@ -24,6 +24,9 @@ Here's a simple example of how to use AIAPiper to download AIA data:
 ```python
 from aiapiper.core import PipeFix
 import astropy.units as u
+```
+
+```python
 downloader = PipeFix()
 downloader.fetch(
 start_date="2023-02-05T00:00:00.000",
