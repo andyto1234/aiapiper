@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aiapiper"
+version = "0.1.0"
+description = "A Python package for downloading SDO/AIA data with alternative server access"
+readme = "README.md"
+authors = [
+    { name = "Andy To", email = "andysh.to@esa.int" }
+]
+license = { file = "LICENSE" }
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Astronomy",
+]
+keywords = ["solar physics", "SDO", "AIA", "astronomy", "data download"]
+dependencies = [
+    "requests>=2.25.0",
+    "astropy>=5.0.0",
+    "tqdm>=4.65.0",
+]
+requires-python = ">=3.8"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "black>=22.0",
+    "isort>=5.0",
+    "flake8>=4.0",
+]
+
+[tool.setuptools]
+packages = ["aiapiper"]
