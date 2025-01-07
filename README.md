@@ -28,13 +28,14 @@ import astropy.units as u
 
 ```python
 downloader = PipeFix()
+
 downloader.fetch(
-start_date="2023-02-05T00:00:00.000",
-end_date="2023-02-05T02:00:00.000",
-wavelength=193,
-cadence=1u.day, # Can also use u.hour or u.min
-output_dir="/path/to/output/directory" # optional
-)
+    start_date="2023-02-05T00:00:00.000",
+    end_date="2023-02-05T02:00:00.000",
+    wavelength=193,
+    cadence=1u.day, # Can also use u.hour or u.min
+    output_dir="/path/to/output/directory" # optional
+    )
 ```
 
 ## Why AIAPiper?
