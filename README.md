@@ -6,7 +6,7 @@ AIAPiper is a Python package that provides an alternative solution for downloadi
 
 You can install AIAPiper using pip:
 ```bash
-git clone https://github.com/yourusername/aiapiper.git
+git clone https://github.com/andyto1234/aiapiper.git
 cd aiapiper
 pip install -e .
 ```
