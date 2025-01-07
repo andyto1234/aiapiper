@@ -1,6 +1,6 @@
 # AIAPiper
 
-AIAPiper is a Python package that provides an alternative solution for downloading SDO/AIA data when the  JSOC server is unavailable. This tool was developed in response to the water damage incident affecting the standard SDO/AIA JSOC server access.
+AIAPiper is a Python package that provides an alternative solution for downloading SDO/AIA data through MEDOC at IAS when the JSOC server is unavailable. This tool was developed in response to the water damage incident affecting the standard SDO/AIA JSOC server access.
 
 ## Installation
 
