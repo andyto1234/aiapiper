@@ -50,8 +50,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Author
 
 Andy To (European Space Agency)
-
-## Acknowledgments
-
-- Solar Dynamics Observatory (SDO) team
-- Atmospheric Imaging Assembly (AIA) team
