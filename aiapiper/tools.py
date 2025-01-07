@@ -56,7 +56,7 @@ class PipeFix:
         os.makedirs(output_dir, exist_ok=True)
 
         params = {
-            "_dc": "1736181211408",
+            "_dc": str(int(datetime.now().timestamp() * 1000)),
             "nocount": "false",
             "p[0]": f"DATE_BETWEEN|date__obs|{start_date}|{end_date}",
             "p[1]": f"CADENCE|mask_cadence|{cadence_str}",
@@ -110,6 +110,11 @@ class PipeFix:
                 filename = file_url.split('/')[-1]
             
             filepath = os.path.join(output_dir, filename)
+
+            # Skip if file already exists
+            if os.path.exists(filepath):
+                # print(f"Skipping existing file: {filepath}")
+                return
             
             with open(filepath, "wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):
