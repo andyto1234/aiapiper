@@ -11,13 +11,6 @@ cd aiapiper
 pip install -e .
 ```
 
-## Requirements
-
-- Python >= 3.8
-- requests >= 2.25.0
-- astropy >= 5.0.0
-- tqdm >= 4.65.0
-
 ## Usage
 Here's a simple example of how to use AIAPiper to download AIA data:
 
@@ -37,6 +30,14 @@ downloader.fetch(
     output_dir="/path/to/output/directory" # optional
     )
 ```
+
+## Requirements
+
+- Python >= 3.8
+- requests >= 2.25.0
+- astropy >= 5.0.0
+- tqdm >= 4.65.0
+
 
 ## Why AIAPiper?
 
