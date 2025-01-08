@@ -96,7 +96,8 @@ class PipeFix:
     def _download_file(self, file_url: str, output_dir: str) -> None:
         """Download a single file from the given URL."""
         try:
-            response = requests.get(file_url, headers=self.headers, stream=True)
+            response = requests.get(file_url, headers=self.headers, stream=True, 
+                                timeout=(30, 80))
             response.raise_for_status()
             
             # Get filename from Content-Disposition header
@@ -120,7 +121,9 @@ class PipeFix:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
             # print(f"Successfully downloaded: {filepath}")
-            
+        except requests.Timeout:
+            print(f"Timeout reached while downloading {file_url} - skipping")
+
         except requests.RequestException as e:
             print(f"Failed to download {file_url}: {e}")
 
