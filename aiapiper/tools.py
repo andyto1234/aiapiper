@@ -6,9 +6,11 @@ import os
 import re
 from tqdm import tqdm
 from astropy import units as u
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
 
 class PipeFix:
-    def __init__(self):
+    def __init__(self, max_workers: int = 8):
         self.base_url = "https://idoc-medoc.ias.u-psud.fr/webs_IAS_SDO_AIA_dataset/records"
         self.headers = {
             "User-Agent": (
@@ -20,6 +22,14 @@ class PipeFix:
             "Accept-Encoding": "gzip, deflate, br",
             "X-Requested-With": "XMLHttpRequest"
         }
+        self.max_workers = max_workers
+        # Create a session for connection pooling
+        self.session = requests.Session()
+        self.session.headers.update(self.headers)
+        
+        # Thread-safe progress tracking
+        self.progress_lock = threading.Lock()
+        self.downloaded_count = 0
     
     def fetch(self, start_date: str, end_date: str, wavelength: int,
                       cadence: u.Quantity, output_dir: Optional[str] = None) -> None:
@@ -67,11 +77,11 @@ class PipeFix:
         }
 
         try:
-            response = requests.get(
+            print("Fetching file list...")
+            response = self.session.get(
                 self.base_url,
                 params=params,
-                headers=self.headers,
-                timeout=20
+                timeout=15  # Reduced timeout for initial request
             )
             response.raise_for_status()
             data = response.json()
@@ -83,21 +93,47 @@ class PipeFix:
             total_files = len(data["data"])
             print(f"Found {total_files} files to download")
             
-            for i, record in tqdm(enumerate(data["data"], 1), desc="Downloading SDO files", total=total_files):
-                file_url = record["get"]
-                # print(f"Downloading file {i}/{total_files}")
-                self._download_file(file_url, output_dir)
+            # Reset progress counter
+            self.downloaded_count = 0
+            
+            # Use ThreadPoolExecutor for concurrent downloads
+            with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+                # Create progress bar
+                with tqdm(total=total_files, desc="Downloading SDO files") as pbar:
+                    # Submit all download tasks
+                    future_to_url = {
+                        executor.submit(self._download_file, record["get"], output_dir): record["get"]
+                        for record in data["data"]
+                    }
+                    
+                    # Process completed downloads
+                    for future in as_completed(future_to_url):
+                        url = future_to_url[future]
+                        try:
+                            result = future.result()
+                            if result:  # Successfully downloaded
+                                with self.progress_lock:
+                                    self.downloaded_count += 1
+                            pbar.update(1)
+                        except Exception as e:
+                            print(f"Error downloading {url}: {e}")
+                            pbar.update(1)
+            
+            print(f"Download complete! Successfully downloaded {self.downloaded_count}/{total_files} files")
                 
         except requests.RequestException as e:
             print(f"Error during request: {e}")
         except json.JSONDecodeError:
             print("Error: Response is not valid JSON")
-            
-    def _download_file(self, file_url: str, output_dir: str) -> None:
-        """Download a single file from the given URL."""
+    
+    def _download_file(self, file_url: str, output_dir: str) -> bool:
+        """Download a single file from the given URL. Returns True if successful."""
         try:
-            response = requests.get(file_url, headers=self.headers, stream=True, 
-                                timeout=(30, 80))
+            response = self.session.get(
+                file_url, 
+                stream=True, 
+                timeout=(10, 30)  # Reduced timeout: (connect, read)
+            )
             response.raise_for_status()
             
             # Get filename from Content-Disposition header
@@ -107,33 +143,45 @@ class PipeFix:
             if filename_match:
                 filename = filename_match.group(1).replace(':', '-')
             else:
-                print("Could not extract filename from headers, using default name")
                 filename = file_url.split('/')[-1]
             
             filepath = os.path.join(output_dir, filename)
 
             # Skip if file already exists
             if os.path.exists(filepath):
-                # print(f"Skipping existing file: {filepath}")
-                return
+                return True
             
+            # Use larger chunk size for better performance
             with open(filepath, "wb") as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
-            # print(f"Successfully downloaded: {filepath}")
+                for chunk in response.iter_content(chunk_size=65536):  # 64KB chunks
+                    if chunk:
+                        f.write(chunk)
+            
+            return True
+            
         except requests.Timeout:
             print(f"Timeout reached while downloading {file_url} - skipping")
-
+            return False
         except requests.RequestException as e:
             print(f"Failed to download {file_url}: {e}")
+            return False
+        except Exception as e:
+            print(f"Unexpected error downloading {file_url}: {e}")
+            return False
+
+    def __del__(self):
+        """Clean up session when object is destroyed."""
+        if hasattr(self, 'session'):
+            self.session.close()
 
 # Example usage
 if __name__ == "__main__":
-    downloader = PipeFix()
+    # You can adjust max_workers based on your needs and server limits
+    downloader = PipeFix(max_workers=6)  # Start with 6 concurrent downloads
     downloader.fetch(
         start_date="2023-02-05T00:00:00.000",
         end_date="2023-02-05T02:00:00.000",
         wavelength=193,
-        cadence=1*u.min,  # Can also use u.hour or u.day
-        output_dir="/Users/andysh.to/Downloads/aia_test"  # optional
+        cadence=1*u.min,
+        output_dir="/Users/andysh.to/Downloads/aia_test"
     )
